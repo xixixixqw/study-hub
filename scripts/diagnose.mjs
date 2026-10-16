@@ -44,7 +44,43 @@ console.log('')
 
 const FN = `${URL_BASE}/functions/v1/verify-group-code`
 
-async function call(payload) {
+/**
+ * Node 内置 fetch（undici）不读 HTTP_PROXY 环境变量，
+ * 在需要代理的网络下会直接 fetch failed。
+ * 因此优先用 curl.exe —— 它走 Windows 系统代理设置。
+ */
+async function callViaCurl(payload) {
+  const { execFile } = await import('child_process')
+  const json = JSON.stringify(payload)
+  const isWin = process.platform === 'win32'
+
+  return new Promise((resolve) => {
+    const args = isWin
+      ? ['-sS', '-X', 'POST', FN, '-H', 'Content-Type: application/json',
+         '-d', json, '-w', '\n__STATUS__%{http_code}']
+      : ['-sS', '-X', 'POST', FN, '-H', 'Content-Type: application/json',
+         '-d', json, '-w', '\n__STATUS__%{http_code}']
+
+    execFile(isWin ? 'curl.exe' : 'curl', args, { timeout: 20000 }, (err, stdout, stderr) => {
+      if (err && !stdout) {
+        resolve({ status: 0, body: (stderr || err.message).trim().slice(0, 200), via: 'curl' })
+        return
+      }
+      const m = String(stdout).match(/\n__STATUS__(\d{3})\s*$/)
+      const status = m ? Number(m[1]) : 0
+      const raw = String(stdout).replace(/\n__STATUS__\d{3}\s*$/, '')
+      let body
+      try {
+        body = JSON.parse(raw)
+      } catch {
+        body = raw.slice(0, 200)
+      }
+      resolve({ status, body, via: 'curl' })
+    })
+  })
+}
+
+async function callViaFetch(payload) {
   try {
     const res = await fetch(FN, {
       method: 'POST',
@@ -58,10 +94,19 @@ async function call(payload) {
     } catch {
       body = text.slice(0, 200)
     }
-    return { status: res.status, body }
+    return { status: res.status, body, via: 'fetch' }
   } catch (e) {
-    return { status: 0, body: String(e.message || e) }
+    return { status: 0, body: String(e.message || e), via: 'fetch' }
   }
+}
+
+/** 先 curl 后 fetch；任一成功即可 */
+async function call(payload) {
+  const a = await callViaCurl(payload)
+  if (a.status > 0) return a
+  const b = await callViaFetch(payload)
+  if (b.status > 0) return b
+  return { ...a, via: `${a.via}+${b.via}` }
 }
 
 // 1) 错暗号：用来探GROUP_CODE 是否配置
@@ -71,23 +116,42 @@ const wrong = await call({
 })
 
 console.log('【探测】错误暗号请求')
-console.log(`  HTTP ${wrong.status}`)
+console.log(`  HTTP ${wrong.status}   (via ${wrong.via})`)
 console.log(`  响应: ${JSON.stringify(wrong.body)}`)
 console.log('')
 
 if (wrong.status === 0) {
-  console.log('✗ 连不上函数端点。检查网络 / 项目 ref 是否正确。')
+  console.log('✗ 请求没到达服务器（网络层就断了）')
+  console.log('')
+  console.log('Node 与 curl 都失败了，通常是代理问题：')
+  console.log('')
+  console.log('  · Node 内置 fetch 不读 HTTP_PROXY，curl.exe 走系统代理')
+  console.log('  · 若开着 Clash/代理，确认「系统代理」已开启')
+  console.log('')
+  console.log('手动验证（复制去跑）：')
+  console.log(`  curl.exe -X POST ${FN} \\`)
+  console.log('    -H "Content-Type: application/json" \\')
+  console.log(`    -d '{"nickname":"t","code":"x","auth_uid":"11111111-1111-1111-1111-111111111111"}' -w " HTTP:%{http_code}"`)
+  console.log('')
+  console.log('  看到 HTTP:404 → 函数没部署，代理是通的')
+  console.log('  看到 HTTP:403 → 函数已部署，是暗号问题')
+  console.log('  仍然连不上 → 先把代理打开再重试')
   process.exit(1)
 }
 if (wrong.status === 404) {
-  console.log('✗ 函数未部署。执行：')
+  console.log('✗ 网络通了，但函数未部署。执行：')
   console.log('    npx --yes supabase functions deploy verify-group-code --no-verify-jwt')
   process.exit(1)
 }
 if (wrong.status === 500 && String(wrong.body).includes('服务未配置')) {
-  console.log('✗ GROUP_CODE 未配置。到Dashboard → Edge Functions → Secrets 添加：')
+  console.log('✗ 网络通了，但 GROUP_CODE 未配置。到 Dashboard → Edge Functions → Secrets 添加：')
   console.log('    GROUP_CODE = 9班yyds   （不带引号）')
   console.log('  加完后重新 deploy 函数')
+  process.exit(1)
+}
+if (wrong.status === 500) {
+  console.log('✗ 函数报 500，但原因不明。完整响应：')
+  console.log('   ', JSON.stringify(wrong.body))
   process.exit(1)
 }
 
