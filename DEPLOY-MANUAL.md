@@ -10,6 +10,28 @@
 
 ---
 
+## 🔴 最卡人的一步（大概率会撞上）
+
+### 必做 · 开匿名登录（忘了这个一定注册失败）
+
+Dashboard → `Authentication` → `Providers`（有的版本叫 `Sign-in providers`）
+→ 找到 **Anonymous Sign-Ins** → **打开开关**
+
+**症状**：登记框点提交，红色报错
+
+```
+匿名登录失败：Anonymous sign-ins are disabled
+```
+
+**原因**：项目的匿名登录默认是关的。代码第一步调的就是 `supabase.auth.signInAnonymously()`，
+被拒了后面全走不下去。
+
+**验证**：开关打开后，浏览器刷新页面，重新登记，应该能进。
+
+> 这个开关**随时能改**，不用重新跑 SQL、不用重新部署函数，改完刷新浏览器就生效。
+
+---
+
 ## ⚡ 快速通道（只做这几条就能本地跑起来）
 
 ```powershell
@@ -333,6 +355,7 @@ curl.exe -X POST https://baciumlsxhbmbpajicof.supabase.co/functions/v1/send-dead
 
 | 报错 | 原因 | 处理 |
 |---|---|---|
+| `Anonymous sign-ins are disabled` | **项目没开匿名登录** | `Authentication → Providers → Anonymous Sign-Ins` 打开 |
 | `npm error canceled` | `npx` 询问安装时你接了下一条命令 | **加 `--yes`**：`npx --yes supabase ...` |
 | `Access token not found` | 未登录/登录过期 | 重跑 `npx --yes supabase login` |
 | `Invalid project ref` | ref 错了 | 应为 `baciumlsxhbmbpajicof`（不带 https） |
