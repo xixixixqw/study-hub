@@ -8,4 +8,4 @@ out
 *.tsbuildinfo
 next-env.d.ts.bak
 supabase/.temp
-*.log
+*.logout-probe.css
