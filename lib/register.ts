@@ -40,9 +40,33 @@ export async function registerWithGroupCode(input: {
       auth_uid: session.user.id,
     },
   })
+
   if (error) {
-    throw new Error(error.message || '暗号校验服务不可用，请稍后再试')
+    // supabase-js 抛错时会把服务端返回体丢在 context 里，这里挖出来给用户看，
+    // 否则只剩一句无信息量的 "Edge Function returned a non-2xx status code"
+    let detail = ''
+    const ctx = (error as { context?: unknown }).context
+    try {
+      if (ctx && typeof (ctx as Response).json === 'function') {
+        const payload = await (ctx as Response).json()
+        if (payload?.error) detail = String(payload.error)
+      }
+    } catch {
+      /* 响应体不是 JSON，忽略 */
+    }
+
+    const status = (error as { status?: number }).status
+    const hint = detail
+      ? detail
+      : status === 404
+        ? '服务未部署，请先执行 functions deploy verify-group-code'
+        : status === 401 || status === 403
+          ? '暗号不正确'
+          : `服务异常（HTTP ${status || '未知'}），请检查 GROUP_CODE 是否已配置`
+
+    throw new Error(hint)
   }
+
   const body = (data || {}) as {
     ok?: boolean
     error?: string
