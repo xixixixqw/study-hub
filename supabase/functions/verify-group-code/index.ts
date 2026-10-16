@@ -35,10 +35,19 @@ Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
   if (req.method !== 'POST') return json({ ok: false, error: 'Method not allowed' }, 405)
 
-  const GROUP_CODE = Deno.env.get('GROUP_CODE') || ''
+  // Dashboard 填 Secret 时容易带上引号或空格，这里统一清洗，
+  // 避免值是 '9班yyds'（带引号）导致永远比不过
+  const clean = (raw: string) => {
+    let v = (raw || '').trim()
+    const m = v.match(/^(['"])([\s\S]*)\1$/)
+    if (m) v = m[2].trim()
+    return v
+  }
+
+  const GROUP_CODE = clean(Deno.env.get('GROUP_CODE') || '')
   const ADMIN_EMAILS = (Deno.env.get('ADMIN_EMAILS') || '')
     .split(',')
-    .map((s) => s.trim().toLowerCase())
+    .map((s) => clean(s).toLowerCase())
     .filter(Boolean)
 
   if (!GROUP_CODE) {
@@ -62,9 +71,12 @@ Deno.serve(async (req: Request) => {
   if (nickname.length > 24) return json({ ok: false, error: '昵称最多 24 个字符' }, 400)
   if (!code) return json({ ok: false, error: '请输入群暗号' }, 400)
 
-  // 暗号比对（不区分大小写，允许首尾空格容错）
+  // 暗号比对（忽略大小写；已剥离 Secret 里可能带的引号）
   if (code.toLowerCase() !== GROUP_CODE.toLowerCase()) {
-    console.warn('暗号校验失败:', nickname)
+    // 只打印长度，不打印暗号本身，避免日志泄露
+    console.warn(
+      `暗号校验失败: nickname=${nickname} 输入长度=${code.length} 配置长度=${GROUP_CODE.length} 配置指纹=${GROUP_CODE.slice(0, 2)}***`,
+    )
     return json({ ok: false, error: '群暗号不正确' }, 403)
   }
 
