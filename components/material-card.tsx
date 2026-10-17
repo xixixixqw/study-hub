@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { copyText } from '@/lib/pwa'
-import { fileIconFor, formatDate, formatSize } from '@/lib/utils'
+import { fileIconFor, formatDate, formatSize, downloadWithName, displayNameFor } from '@/lib/utils'
 import type { Material } from '@/lib/types'
 
 export default function MaterialCard({
@@ -66,11 +66,19 @@ export default function MaterialCard({
           </div>
 
           <div className="mt-2.5 flex items-center gap-1.5">
-            <Button asChild size="sm" className="h-8 flex-1 rounded-lg text-xs">
-              <a href={m.file_url || '#'} target="_blank" rel="noopener noreferrer">
-                <Download className="h-3.5 w-3.5" />
-                下载
-              </a>
+            <Button
+              size="sm"
+              className="h-8 flex-1 rounded-lg text-xs"
+              onClick={async () => {
+                try {
+                  await downloadWithName(m.file_url || '#', displayNameFor(m.title, m.file_path))
+                } catch {
+                  window.open(m.file_url || '#', '_blank', 'noopener')
+                }
+              }}
+            >
+              <Download className="h-3.5 w-3.5" />
+              下载
             </Button>
 
             <Button

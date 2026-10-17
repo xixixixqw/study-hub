@@ -14,7 +14,7 @@ import { countDownload, deleteMaterial, fetchMaterial, setPinned } from '@/lib/a
 import { copyText } from '@/lib/pwa'
 import { useMember } from '@/lib/member-context'
 import {
-  extOf, fileIconFor, formatDateTime, formatSize, isPreviewable,
+  extOf, fileIconFor, formatDateTime, formatSize, isPreviewable, downloadWithName, displayNameFor,
 } from '@/lib/utils'
 import { toast } from 'sonner'
 
@@ -69,9 +69,14 @@ export default function MaterialDetailPage() {
     ? `${window.location.origin}/material/${m.id}`
     : `/material/${m.id}`
 
-  const onDownload = () => {
+  const onDownload = async () => {
     countDownload(m.id)
-    window.open(m.file_url || '#', '_blank', 'noopener')
+    try {
+      await downloadWithName(m.file_url || '#', displayNameFor(m.title, m.file_path))
+    } catch {
+      // 兜底：直接新窗口打开（保留原始行为）
+      window.open(m.file_url || '#', '_blank', 'noopener')
+    }
   }
 
   return (

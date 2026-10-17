@@ -1,8 +1,8 @@
-fix(upload): 存储键改纯 ASCII，修复中文文件名上传失败
+feat(download): 下载保存为中文原名
 
-Supabase Storage 的 key 校验拒绝非 ASCII 字符，
-中文文件名（如 第1章_学习指导.pdf）直接报 Invalid key。
+Storage 键是纯 ASCII（避免中文文件名被拒），但下载时浏览器
+会用 ASCII 键名保存。新增 downloadWithName：fetch 文件内容后
+用 Blob + a.download 以中文原名触发保存，失败兜底 window.open。
 
-改为：存储键 = 时间戳 + ASCII 净化名 + 小写扩展名
-（非 ASCII 字符折叠为 -，全中文文件名回退为 file）；
-中文原名继续存 materials.title，前端展示与下载提示不受影响。
+接入详情页和卡片两处下载入口。Storage CORS 已确认 Allow-Origin:*，
+fetch 跨域下载可用。

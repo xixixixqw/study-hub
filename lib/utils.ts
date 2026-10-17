@@ -65,6 +65,28 @@ export function isPreviewable(mime?: string | null, ext?: string): boolean {
   return ext === 'pdf'
 }
 
+/** 从存储键推断展示用文件名：优先用资料标题 + 扩展名，回退到键末段 */
+export function displayNameFor(title: string, filePath: string): string {
+  const ext = extOf(filePath)
+  const hasExt = new RegExp(`\\.${ext}$`, 'i').test(title)
+  return hasExt ? title : `${title}${ext ? '.' + ext : ''}`
+}
+
+/** 以指定文件名下载远程文件（绕过 Storage 的 ASCII 键名，保存为中文原名） */
+export async function downloadWithName(url: string, filename: string): Promise<void> {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`下载失败：HTTP ${res.status}`)
+  const blob = await res.blob()
+  const objectUrl = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = objectUrl
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
+}
+
 export function fileIconFor(nameOrMime: string): string {
   const s = nameOrMime.toLowerCase()
   if (s.includes('pdf')) return '📕'
