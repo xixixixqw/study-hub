@@ -1,1 +1,6 @@
-fix(ui): 隐藏 Netlify 徽标，避免遮挡移动端底部导航
+fix(ui): 抢占 nl-badge-frame id 彻底屏蔽 Netlify 徽标
+
+Netlify 免费套餐徽标通过 hud 脚本注入 srcdoc iframe，
+官方开关和普通 CSS 均无法关闭。利用脚本开头的守卫：
+检测到已存在 nl-badge-frame 元素即 return，不注入。
+在 body 里预置隐藏的 <div id="nl-badge-frame"> 即可。

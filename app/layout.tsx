@@ -34,6 +34,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="zh-CN">
       <body>
+        {/* 抢占 Netlify HUD 徽标的 iframe id：脚本检测到已存在即跳过注入。
+            免费套餐徽标不可官方关闭，这是最干净的屏蔽方式。 */}
+        <div id="nl-badge-frame" style={{ display: 'none' }} />
         <MemberProvider>
           <AppShell>{children}</AppShell>
         </MemberProvider>
