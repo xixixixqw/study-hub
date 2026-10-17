@@ -1,5 +1,11 @@
-fix(deploy): 移除 NPM_VERSION 锁，只锁 Node 20
+fix(deploy): 用 overrides 钉死 unrs-resolver，根治 Invalid Version
 
-Netlify 报 npm error Invalid Version，源于 netlify.toml 里
-NPM_VERSION=10.9.0 无法被解析。改为只锁 NODE_VERSION=20，
-让 Netlify 用 Node 20 自带的 npm 10，避免版本解析错误。
+病根：eslint-import-resolver-typescript 的传递依赖 unrs-resolver
+在非 macOS 平台下，npm 会为 @unrs/resolver-binding-darwin-arm64
+生成 version 为 null 的残缺条目，Netlify 严格安装时读到空版本
+即抛 npm error Invalid Version（且不指明是哪个包）。
+
+之前删单条无效——npm 重新解析会再次生成。
+
+根治：package.json 加 overrides 钉死 unrs-resolver@1.12.2，
+重新生成 lock 后残缺条目彻底消失（0 异常）。
