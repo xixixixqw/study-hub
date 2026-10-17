@@ -1,0 +1,5 @@
+fix(deploy): 移除 NPM_VERSION 锁，只锁 Node 20
+
+Netlify 报 npm error Invalid Version，源于 netlify.toml 里
+NPM_VERSION=10.9.0 无法被解析。改为只锁 NODE_VERSION=20，
+让 Netlify 用 Node 20 自带的 npm 10，避免版本解析错误。

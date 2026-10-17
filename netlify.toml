@@ -1,6 +1,7 @@
 # Netlify 构建配置
-# 关键：锁死 Node 版本，Netlify 默认会用 Node 24 + npm 11，
-# 与本项目 lock 文件（npm 10 生成）不兼容，导致 postcss 报 ETARGET
+# 锁死 Node 版本为 20（Netlify 默认用 Node 24 + npm 11，
+# 与本项目 lock 文件不兼容，导致 postcss 报 ETARGET）。
+# 只锁 Node，不锁 npm —— 让 Netlify 用 Node 20 自带的 npm 10。
 
 [build]
   command = "npx next build"
@@ -8,11 +9,6 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  NPM_VERSION = "10.9.0"
-
-# 显式指定 Node 版本，双保险（配合 .nvmrc）
-[build.processing]
-  skip_processing = false
 
 [context.production.environment]
   NODE_VERSION = "20"
