@@ -34,7 +34,7 @@ export const ALLOWED_EXT = [
 export type AllowedExt = (typeof ALLOWED_EXT)[number]
 
 export const CATEGORIES = [
-  '课件', '作业', '真题', '笔记', '竞赛', '项目', '其他',
+  '高数', '线代', '程设', '英语', '习概', '大物', '重点笔记', '其他',
 ] as const
 export type Category = (typeof CATEGORIES)[number]
 

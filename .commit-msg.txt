@@ -1,8 +1,4 @@
-feat(download): 下载保存为中文原名
+feat: 分类改为高数/线代/程设/英语/习概/大物/重点笔记/其他
 
-Storage 键是纯 ASCII（避免中文文件名被拒），但下载时浏览器
-会用 ASCII 键名保存。新增 downloadWithName：fetch 文件内容后
-用 Blob + a.download 以中文原名触发保存，失败兜底 window.open。
-
-接入详情页和卡片两处下载入口。Storage CORS 已确认 Allow-Origin:*，
-fetch 跨域下载可用。
+上传默认分类同步改为高数。数据库无分类约束，无需迁移；
+已存在的旧分类资料仍显示在「全部」下。

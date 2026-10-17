@@ -34,7 +34,7 @@ export default function UploadPage() {
   const [drag, setDrag] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [batchDesc, setBatchDesc] = useState('')
-  const [batchCat, setBatchCat] = useState<string>('课件')
+  const [batchCat, setBatchCat] = useState<string>('高数')
   const [submitting, setSubmitting] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
