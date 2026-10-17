@@ -59,3 +59,9 @@
     scrollbar-width: none;
   }
 }
+/* 隐藏 Netlify 免费徽标：固定悬浮会遮挡移动端底部导航 */
+a[href*='netlify.com'],
+.netlify-badge,
+#netlify-badge {
+  display: none !important;
+}
