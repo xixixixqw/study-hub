@@ -73,7 +73,15 @@ export async function uploadMaterial(input: {
   const supabase = getSupabase()
   const { member, file, title, description, category, onProgress } = input
 
-  const safe = file.name.replace(/[^\w.\-\u4e00-\u9fa5]/g, '_')
+  // 存储键必须纯 ASCII：Supabase Storage 的 key 校验拒绝中文等非 ASCII 字符
+  // （报 Invalid key）。中文原名保存在 materials.title 里，展示不受影响。
+  const ext = (file.name.match(/\.[a-z0-9]+$/i)?.[0] || '').toLowerCase()
+  const base = file.name
+    .replace(/\.[^.]+$/, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^[-.]+|[-.]+$/g, '')
+  const safe = `${base || 'file'}${ext}`
   const path = `${member.id}/${Date.now()}-${safe}`
 
   onProgress?.(10)

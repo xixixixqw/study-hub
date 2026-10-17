@@ -1,11 +1,8 @@
-fix(deploy): 用 overrides 钉死 unrs-resolver，根治 Invalid Version
+fix(upload): 存储键改纯 ASCII，修复中文文件名上传失败
 
-病根：eslint-import-resolver-typescript 的传递依赖 unrs-resolver
-在非 macOS 平台下，npm 会为 @unrs/resolver-binding-darwin-arm64
-生成 version 为 null 的残缺条目，Netlify 严格安装时读到空版本
-即抛 npm error Invalid Version（且不指明是哪个包）。
+Supabase Storage 的 key 校验拒绝非 ASCII 字符，
+中文文件名（如 第1章_学习指导.pdf）直接报 Invalid key。
 
-之前删单条无效——npm 重新解析会再次生成。
-
-根治：package.json 加 overrides 钉死 unrs-resolver@1.12.2，
-重新生成 lock 后残缺条目彻底消失（0 异常）。
+改为：存储键 = 时间戳 + ASCII 净化名 + 小写扩展名
+（非 ASCII 字符折叠为 -，全中文文件名回退为 file）；
+中文原名继续存 materials.title，前端展示与下载提示不受影响。
