@@ -202,7 +202,7 @@ export default function DeadlineDialog({
                     : 'border-border bg-background text-muted-foreground hover:bg-slate-50'
                 }`}
               >
-                私有（仅自己+管理员）
+                仅自己可见
               </button>
             </div>
           </div>

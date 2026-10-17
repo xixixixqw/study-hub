@@ -203,13 +203,12 @@ drop policy if exists materials_delete_own on public.materials;
 create policy materials_delete_own on public.materials for delete
   using (member_id = public.current_member_id() or public.is_admin());
 
--- deadlines：公开人人可见；私有仅 owner/admin
+-- deadlines：公开人人可见；私有仅 owner 本人可见（管理员也不可见）
 drop policy if exists deadlines_select on public.deadlines;
 create policy deadlines_select on public.deadlines for select
   using (
     visibility = 'public'
     or member_id = public.current_member_id()
-    or public.is_admin()
   );
 
 drop policy if exists deadlines_insert on public.deadlines;
