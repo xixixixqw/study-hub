@@ -43,7 +43,11 @@ export default function MaterialList({ limit }: { limit?: number }) {
     load()
   }, [load])
 
-  const shown = useMemo(() => (limit ? list.slice(0, limit) : list), [list, limit])
+  const [expanded, setExpanded] = useState(false)
+  const shown = useMemo(
+    () => (limit && !expanded ? list.slice(0, limit) : list),
+    [list, limit, expanded],
+  )
   const total = list.length
 
   return (
@@ -154,8 +158,12 @@ export default function MaterialList({ limit }: { limit?: number }) {
 
           {limit && total > limit && (
             <div className="mt-4 text-center">
-              <Button asChild variant="outline" className="h-11 w-full">
-                <a href="/materials">查看全部 {total} 份资料</a>
+              <Button
+                variant="outline"
+                className="h-11 w-full"
+                onClick={() => setExpanded((v) => !v)}
+              >
+                {expanded ? '收起' : `查看全部 ${total} 份资料`}
               </Button>
             </div>
           )}
